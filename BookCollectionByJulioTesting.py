@@ -1,6 +1,7 @@
 from appium import webdriver
 from appium.webdriver.common.mobileby import MobileBy
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import InvalidSessionIdException
 import unittest
 import time
 
@@ -35,6 +36,11 @@ class TestAppium(unittest.TestCase):
                      "Tere Liye", 
                      "2015", 
                      "Fiksi"]
+        self.bookData3 = ["https://kognisia.co/wp-content/uploads/2017/04/1795191_35b54ca3-b77f-46dc-aeba-5a64d6c5bf7c.jpg", 
+                     "Testing Crash Book", 
+                     "Usman", 
+                     "2147483649", 
+                     "Nonfiksi"]
 
     def tearDown(self) -> None:
         if self.driver:
@@ -54,12 +60,6 @@ class TestAppium(unittest.TestCase):
         addBookButton = self.driver.find_element(MobileBy.ID, 'com.salugan.todolist:id/fab')
         addBookButton.click()
         time.sleep(1)
-        
-        # bookCover = self.driver.find_element(MobileBy.ID, "com.salugan.todolist:id/edtCover")
-        # bookTitle = self.driver.find_element(MobileBy.ID, "com.salugan.todolist:id/edtJudul")
-        
-        # bookPublishYear = self.driver.find_element(MobileBy.ID, "com.salugan.todolist:id/edtTahun")
-        # bookCategory = self.driver.find_element(MobileBy.ID, "com.salugan.todolist:id/edtKategori")
         okButton = self.driver.find_element(MobileBy.ID, "android:id/button1")
 
         bookElements = [(MobileBy.ID, "com.salugan.todolist:id/edtCover"),
@@ -87,7 +87,6 @@ class TestAppium(unittest.TestCase):
         except:
             print("Buku berhasil ditambahkan")
             print(30*"=")
-
 
     def test_Case2(self) -> None:
         self.driver.implicitly_wait(10)
@@ -162,7 +161,6 @@ class TestAppium(unittest.TestCase):
                 print("Buku tidak diedit / tetap")
                 print(30*"=")
 
-
     def test_Case3(self) -> None:
         self.driver.implicitly_wait(10)
         print("\nTest Case Delete Satu Buku")
@@ -202,9 +200,46 @@ class TestAppium(unittest.TestCase):
                 print("Buku berhasil dihapus")
                 print(30*"=")
 
-    # def test_case4(self)-> None:
-    #     print()
+    def test_case4(self)-> None:
+        self.driver.implicitly_wait(10)
+        print("Test Case tambah satu buku invalid tahun terbit")
         
+        try :
+            nodata = self.driver.find_element(MobileBy.ID, "com.salugan.todolist:id/textView")
+            if (nodata.is_displayed()):
+                print("Berhasil masuk ke menu")
+        except:
+            self.driver.implicitly_wait(10)
+            print("Buku telah ada sebelumnya dan berhasil masuk ke menu")
         
+        addBookButton = self.driver.find_element(MobileBy.ID, 'com.salugan.todolist:id/fab')
+        addBookButton.click()
+        time.sleep(1)
+        okButton = self.driver.find_element(MobileBy.ID, "android:id/button1")
+
+        bookElements = [(MobileBy.ID, "com.salugan.todolist:id/edtCover"),
+                       (MobileBy.ID, "com.salugan.todolist:id/edtJudul"),
+                       (MobileBy.ID, "com.salugan.todolist:id/edtNamaPenulis"),
+                       (MobileBy.ID, "com.salugan.todolist:id/edtTahun"),
+                       (MobileBy.ID, "com.salugan.todolist:id/edtKategori")]
+
+#          memasukkan data ke dalam form
+        for i, data in enumerate(self.bookData3):
+            input_element = self.driver.find_element(*bookElements[i])
+            input_element.send_keys(data)
+            time.sleep(0.1)
+
+#       mengeklik ok /save button
+#       mengecek terjadinya crash
+        try:
+            okButton = self.driver.find_element(MobileBy.ID, "android:id/button1")
+            okButton.click()
+            time.sleep(0.5)
+            if InvalidSessionIdException :
+                print("Aplikasi telah berhenti/crash")
+                pass
+        except InvalidSessionIdException as e:
+            print(f"Aplikasi telah berhenti/crash dikarekanakan\n{e}")
+
 if __name__ == '__main__':
     unittest.main()
